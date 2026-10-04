@@ -1,0 +1,324 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------- tokens */
+
+:root,
+.tone-dark {
+  --t-bg: #050505;
+  --t-fg: #f5f5f5;
+  --t-muted: #8b8b8b;
+  --t-line: #242424;
+}
+
+.tone-light {
+  --t-bg: #eeeeeb;
+  --t-fg: #090909;
+  --t-muted: #5f5f5c;
+  --t-line: #c9c9c5;
+}
+
+:root {
+  --gutter: 18px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-cut: cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --gutter: 44px;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--t-bg);
+  --color-fg: var(--t-fg);
+  --color-muted: var(--t-muted);
+  --color-line: var(--t-line);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
+}
+
+/* ------------------------------------------------------------------ base */
+
+html {
+  background: #050505;
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--t-bg);
+  color: var(--t-fg);
+  font-family: var(--font-sans);
+  /* every piece of interface text is lowercase */
+  text-transform: lowercase;
+  overflow-x: clip;
+}
+
+.tone-dark,
+.tone-light {
+  background: var(--t-bg);
+  color: var(--t-fg);
+}
+
+::selection {
+  background: #f5f5f5;
+  color: #050505;
+}
+
+:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 4px;
+}
+
+/* snapping is a desktop nicety; touch scrolling stays free */
+@media (hover: none), (max-width: 767px) {
+  html {
+    scroll-snap-type: none;
+  }
+}
+
+/* ------------------------------------------------------------ primitives */
+
+@layer components {
+  .shell {
+    width: 100%;
+    max-width: 1440px;
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  .grid-12 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 20px;
+  }
+
+  @media (min-width: 768px) {
+    .grid-12 {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .grid-12 {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 24px;
+    }
+  }
+
+  .snap {
+    scroll-snap-align: start;
+  }
+
+  .display {
+    font-weight: 500;
+    line-height: 0.92;
+    letter-spacing: -0.045em;
+    overflow-wrap: break-word;
+  }
+
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    color: var(--t-muted);
+  }
+
+  @media (min-width: 1024px) {
+    .label {
+      font-size: 0.75rem;
+    }
+  }
+
+  .link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.35em;
+    text-decoration-color: var(--t-muted);
+    transition: text-decoration-color 0.25s var(--ease);
+  }
+
+  .link:hover {
+    text-decoration-color: currentColor;
+  }
+
+  /* media frame: clips the hover scale and the parallax layer */
+  .media {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .media-img {
+    transition: transform 0.9s var(--ease);
+  }
+
+  @media (hover: hover) {
+    .media:hover .media-img {
+      transform: scale(1.015);
+    }
+  }
+
+  .parallax {
+    position: absolute;
+    inset: -8% 0;
+    will-change: transform;
+  }
+
+  /* small solid label used by the fixed navigation */
+  .chip {
+    padding: 0.15em 0.5em;
+    background: #050505;
+    color: #f5f5f5;
+    transition: color 0.2s var(--ease);
+  }
+
+  a.chip:hover {
+    color: #8b8b8b;
+  }
+
+  .pixelated {
+    image-rendering: pixelated;
+  }
+}
+
+/* --------------------------------------------------------------- reveals */
+
+[data-reveal="fade"] {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 0.9s var(--ease) var(--d, 0ms),
+    transform 0.9s var(--ease) var(--d, 0ms);
+}
+
+/* the clip sits on the child: a clip-path on the observed element itself would shrink the box
+   the intersection observer sees to its top edge, and tall media could then never reveal */
+[data-reveal="clip"] > * {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 1.1s var(--ease-cut) var(--d, 0ms);
+}
+
+[data-reveal="clip"] > .media-img {
+  transition:
+    clip-path 1.1s var(--ease-cut) var(--d, 0ms),
+    transform 0.9s var(--ease);
+}
+
+[data-reveal="lines"] > .line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+[data-reveal="lines"] > .line > span {
+  display: block;
+  transform: translate3d(0, 110%, 0);
+  transition: transform 1s var(--ease) calc(var(--i, 0) * 90ms);
+}
+
+[data-reveal="fade"][data-in] {
+  opacity: 1;
+  transform: none;
+}
+
+[data-reveal="clip"][data-in] > * {
+  clip-path: inset(0 0 0 0);
+}
+
+[data-reveal="lines"][data-in] > .line > span {
+  transform: none;
+}
+
+@media (scripting: none) {
+  [data-reveal="fade"] {
+    opacity: 1;
+    transform: none;
+  }
+
+  [data-reveal="clip"] > * {
+    clip-path: none;
+  }
+
+  [data-reveal="lines"] > .line > span {
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------- cursor */
+
+.cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform;
+}
+
+.cursor > i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #f5f5f5;
+  /* hairline ring keeps the dot visible on light backgrounds */
+  box-shadow: 0 0 0 1px #050505;
+  transition: transform 0.18s var(--ease);
+}
+
+.cursor[data-visible] {
+  opacity: 1;
+}
+
+.cursor[data-active] > i {
+  transform: scale(3.25);
+}
+
+html.has-cursor,
+html.has-cursor * {
+  cursor: none !important;
+}
+
+/* -------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+    scroll-snap-type: none;
+  }
+
+  [data-reveal="fade"],
+  [data-reveal="lines"] > .line > span {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  [data-reveal="clip"] > * {
+    clip-path: none;
+    transition: none;
+  }
+
+  .media-img,
+  .cursor > i {
+    transition: none;
+  }
+
+  .media:hover .media-img {
+    transform: none;
+  }
+}
